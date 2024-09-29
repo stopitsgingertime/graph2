@@ -1,0 +1,282 @@
+<head>
+
+</head>
+
+
+<style>
+.link-line {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+.node circle {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+text {
+  font: 14px sans-serif;
+  pointer-events: none;
+}
+
+
+
+</style>
+
+<body>
+
+<div>
+<script src="https://d3js.org/d3.v3.js"></script>
+
+
+<script>
+    var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+  
+  
+
+var links = [
+  {source: "Scott", target: "Wilson", type: "soulmates", value:"100"},
+  {source: "Scott", target: "Kathleen", type: "married"},
+  {source: "Scott", target: "Shackles", type: "toxic polycule"},
+  {source: "Scott", target: "Teddy", type: "detested second-in-command"},
+  {source: "Wilson", target: "Shackles", type: "toxic polycule"},
+  {source: "Wilson", target: "Cherry", type: "adored mentor/mentee"},
+  {source: "Wilson", target: "Oriana", type: "married"},
+  {source: "Wilson", target: "Birdie", type: "winter journey"},
+  {source: "Cherry", target: "Birdie", type: "bffs!!!"},
+  {source: "Cherry", target: "Lillie", type: "literally in love"},
+  {source: "Cherry", target: "Atch", type: "hurt/comfort"},
+  {source: "Atch", target: "Pennell", type: "literally in love"},
+  {source: "Atch", target: "Oates", type: "max & climax"},
+  {source: "Oates", target: "Meares", type: "horse"},
+  {source: "Deb", target: "Evans", type: "big fat crush"}
+  {source: "Cherry", target: "Oates", type: "popgun incident"},
+  {source: "Wilson", target: "Mawson", type: "dislike"},
+  {source: "Kathleen", target: "Nansen", type: "if you believe roland"},
+  {source: "Kathleen", target: "Hilda", type: "chicago slaughter house"},
+  {source: "Kathleen", target: "Oriana", type: "WAGs"},
+  {source: "Teddy", target: "Hilda", type: "married"},
+  {source: "Nansen", target: "Amundsen", type: "hero worship"},
+  {source: "Amundsen", target: "Scott", type: "RACE 2 DA POLE"},
+  {source: "Amundsen", target: "Shackles", type: "mutual appreciation"},
+  {source: "ADG", target: "Amundsen", type: "dom/sub"},
+  {source: "Amundsen", target: "Cook", type: "soulmates"},
+  {source: "Shackles", target: "Wild", type: "soulmates", value:"100"},
+  {source: "Shackles", target: "Hurley", type: "m&ms are in play"},
+  {source: "ADG", target: "Shackles", type: "mostly boat sales"},
+  {source: "Kathleen", target: "Mawson", type: "if you believe david day"},
+    {source: "Wilson", target: "Deb", type: "horny hero worship"},
+    {source: "Deb", target: "Silas", type: "canadian honeymoon"},
+   {source: "Griff", target: "Deb", type: "constant forcefem"},
+   {source: "Silas", target: "Griff", type: "adventure boyz"},
+   {source: "Priestley", target: "Griff", type: "brother-in-law"},
+   {source: "Priestley", target: "Silas", type: "brother-in-law"},
+   {source: "Mawson", target: "Shackles", type: "fear"},
+   {source: "Mawson", target: "Hurley", type: "fondness"},
+   {source: "Mawson", target: "Wild", type: "expedition type beat"},
+     {source: "Mawson", target: "Mertz", type: "he ATE HIM"},
+     {source: "Mertz", target: "Ninnis", type: "soulmates"},
+ {source: "ADG", target: "Cook", type: "penguin forcefeeding"},
+   {source: "ADG", target: "Lecointe", type: "loyal attack dog"},
+   {source: "Racovitza", target: "Lecointe", type: "lying with his full weight on top of him"},
+     {source: "Racovitza", target: "Arctowski", type: "ass-centric caricature"},
+    {source: "Shackles", target: "Worsley", type: "voyage of the caird"},
+      {source: "Shackles", target: "Crean", type: "voyage of the caird"},
+        {source: "Crean", target: "Teddy", type: "deeply romantic rescue"},
+          {source: "Lashly", target: "Teddy", type: "scurvy nurse"},
+{source: "Crean", target: "Scott", type: "loyal sailor"},
+  {source: "Lashly", target: "Evans", type: "discovery buds"},
+    {source: "Crean", target: "Evans", type: "discovery buds"},
+      {source: "Scott", target: "Evans", type: "crevasse boner"},
+    {source: "Lillie", target: "Pennell", type: "gay commiseration"},
+     {source: "Silas", target: "Lillie", type: "cambridge"},
+       {source: "Griff", target: "Lillie", type: "cambridge"},
+         {source: "Lillie", target: "Deb", type: "cambridge"},
+
+    {source: "Wild", target: "Worsley", type: "RIP BOSS"},
+      {source: "Macklin", target: "Worsley", type: "especial pals"},
+     {source: "Macklin", target: "Atch", type: "SCURVY?!?!?"},
+     {source: "Scott", target: "Arctowski", type: "competing expedition LOL JK HAHA"},
+    {source: "Cherry", target: "Pennell", type: "gay commiseration"},
+   {source: "Gran", target: "Deb", type: "one sided crush"},
+     {source: "Teddy", target: "Gran", type: "harem member"},
+       {source: "Teddy", target: "Nelson", type: "harem member"},
+         {source: "Teddy", target: "Nelson", type: "harem member"},
+   {source: "Griff", target: "Nelson", type: "debate me"},
+          {source: "Amundsen", target: "Johansen", type: "did not end well"},
+    {source: "Nansen", target: "Johansen", type: "furthest north"},
+      {source: "Macklin", target: "Hussey", type: "alphonse & d'aubrey"},
+        {source: "Macklin", target: "Marr", type: "that's his son"},
+         {source: "Worsley", target: "Marr", type: "that's his son"},
+  
+        {source: "Wordie", target: "Deb", type: "peepaw rivalry"},
+     {source: "Hussey", target: "Wordie", type: "the joplittle of endurance"},
+    {source: "Amundsen", target: "Wisting", type: "best boy"},
+       {source: "Wordie", target: "Clark", type: "if you believe michael smith"},
+  
+         {source: "Blackborow", target: "Shackles", type: "baby on board"},
+           {source: "Blackborow", target: "Bakewell", type: "stowaway soulmates"},
+  
+        {source: "McIlroy", target: "Wild", type: "colonialism bfs"},
+        {source: "McIlroy", target: "Macklin", type: "doctor bj bros"},
+
+       {source: "Hussey", target: "McIlroy", type: "billabong boys"},
+         {source: "McIlroy", target: "Hurley", type: "billabong boys"},
+       {source: "Hussey", target: "Hurley", type: "billabong boys"},
+
+         {source: "Ponting", target: "Meares", type: "he's in this relationship"},
+
+           {source: "Wordie", target: "James", type: "cambridge"},
+      {source: "Bakewell", target: "How", type: "shipboard pals"},
+        {source: "James", target: "Hurley", type: "quote satellite unquote"},
+          {source: "Algarsson", target: "Worsley", type: "boy about to pounce"},
+       {source: "Algarsson", target: "Amundsen", type: "aborted rescue attempt"}
+
+  
+
+
+
+
+  
+
+  
+];
+
+var nodes = {};
+
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
+  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
+});
+
+var width = 1920,
+    height = 900;
+
+var force = d3.layout.force()
+    .nodes(d3.values(nodes))
+    .links(links)
+    .size([width, height])
+    .linkDistance(220)
+    .charge(-270)
+    .on("tick", tick)
+    .start();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var link = svg.selectAll(".link")
+    .data(force.links())
+  .enter()
+    .append("g")
+    .attr("class", "link")
+    .append("line")
+    .attr("class", "link-line");
+
+var node = svg.selectAll(".node")
+    .data(force.nodes())
+  .enter().append("g")
+    .attr("class", "node")
+    .on("mouseover", mouseover)
+    .on("mouseout", mouseout)
+    .call(force.drag);
+  
+
+
+node.append("circle")
+  .attr("r", function(d) {      
+     d.weight = link.filter(function(l) {
+       return l.source.index == d.index || l.target.index == d.index
+     }).size();      
+     var minRadius = 10;
+     return minRadius + (d.weight * 2);
+   })
+      .style("fill", function(d) {
+ 
+  
+  if(d.weight > 4) {
+       return "#d95955";
+   
+  
+  } else if((d.weight >= 3) && (d.weight <= 4)) {
+         
+             
+          return "#e8a854";
+    } else  { 
+    
+    return "#f0dc84";
+    
+  }
+    
+ 
+});
+
+
+
+node.append("text")
+    .attr("dx", 12)
+    .attr("dy", ".35em")
+    .text(function(d) { return d.name; });
+
+var labelLine = svg.selectAll(".link")
+    .append("text")
+    .attr("class", "link-label")
+   .attr("font-family", "Arial, Helvetica, sans-serif")
+    .attr("fill", "Black")
+    .style("font", "normal 10px Courier")
+    .attr("dy", ".35em")
+    .attr("text-anchor", "middle")
+    .text(function(d) { return d.type; });
+
+function tick() {
+  link
+      .attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+    
+  labelLine
+      .attr("x", function(d) {
+          return (d.source.x + d.target.x)/2; })
+      .attr("y", function(d) {
+          return (d.source.y + d.target.y)/2; });
+        
+
+  node
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+}
+
+
+  
+ function mouseover() {
+  d3.select(this).select("circle").transition()
+      .duration(750)
+      .attr("r", function(d) {      
+     d.weight = link.filter(function(l) {
+       return l.source.index == d.index || l.target.index == d.index
+     }).size();      
+     var minRadius = 10;
+     return minRadius + (d.weight * 4);
+   });
+ }
+
+ function mouseout() {
+  d3.select(this).select("circle").transition()
+     .duration(750)
+     .attr("r", function(d) {      
+     d.weight = link.filter(function(l) {
+       return l.source.index == d.index || l.target.index == d.index
+     }).size();      
+     var minRadius = 10;
+     return minRadius + (d.weight * 2);
+   });
+ }
+
+
+</script></div>
+</body>
