@@ -1,43 +1,788 @@
+<!DOCTYPE html>
+<html>
 <head>
-
+  <title>Historical Relationships Network</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style type="text/css">
+    #network {
+      width: 100vw;
+      height: 100vh;
+    }
+    #title-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      pointer-events: none;
+    }
+    #filter-menu {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1001;
+      min-width: 200px;
+      max-width: 300px;
+    }
+    #filter-menu-header {
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid #eee;
+      font-family: sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      color: #333;
+    }
+    #filter-menu-header:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    #filter-menu-content {
+      display: none;
+      padding: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    #filter-menu-content.visible {
+      display: block;
+    }
+    .filter-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 14px;
+      color: #333;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .filter-option:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    .filter-option.selected {
+      background-color: #0066cc;
+      color: white;
+    }
+    .filter-option.clear {
+      font-weight: 600;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+    #title-box h2 {
+      margin: 0 0 10px 0;
+      font-family: sans-serif;
+      font-size: 24px;
+      color: #333;
+    }
+    #title-box p {
+      margin: 0;
+      font-family: sans-serif;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.4;
+    }
+    #info-pane {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      max-height: calc(100vh - 200px);
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1001;
+      display: none;
+      overflow-y: auto;
+      font-family: sans-serif;
+    }
+    #info-pane.visible {
+      display: block;
+    }
+    #info-pane .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+    }
+    #info-pane .close-btn:hover {
+      color: #333;
+    }
+    #info-pane h2 {
+      margin: 0 0 20px 0;
+      font-size: 22px;
+      color: #333;
+      padding-right: 30px;
+      font-weight: 600;
+    }
+    #info-pane .photo {
+      width: 100%;
+      max-width: 250px;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 0 auto 15px;
+      display: block;
+      background-color: #f0f0f0;
+    }
+    #info-pane .info-section {
+      margin-bottom: 15px;
+    }
+    #info-pane .info-section h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: #555;
+      font-weight: 600;
+    }
+    #info-pane .info-section p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+    }
+    #info-pane .relations-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #info-pane .relations-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+    #info-pane .relations-list li:last-child {
+      border-bottom: none;
+    }
+    #info-pane .relations-list .relation-name {
+      font-weight: 600;
+      color: #0066cc;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #info-pane .relations-list .relation-name:hover {
+      color: #004499;
+    }
+    #info-pane .relations-list .relation-type {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
 </head>
-
-
-<style>
-.link-line {
-  fill: none;
-  stroke: #666;
-  stroke-width: 1.5px;
-}
-
-.node circle {
-  fill: #ccc;
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-text {
-  font: 14px sans-serif;
-  pointer-events: none;
-}
-
-
-
-</style>
-
 <body>
+  <div id="network"></div>
+  <div id="title-box">
+    <h2>The Polar Polycule</h2>
+    <p>welcome to the polar polycule. click the circles and drag to explore relationships. use your touchpad to zoom</p>
+  </div>
+  <div id="filter-menu">
+    <div id="filter-menu-header" onclick="toggleFilterMenu()">Filter by Expedition ▶</div>
+    <div id="filter-menu-content">
+      <div class="filter-option clear" onclick="clearFilter()">Clear Filter</div>
+    </div>
+  </div>
+  <div id="info-pane">
+    <button class="close-btn" onclick="closeInfoPane()">&times;</button>
+    <img id="info-photo" class="photo" src="" alt="">
+    <h2 id="info-fullname-lifespan"></h2>
+    <div class="info-section">
+      <h3>Expeditions</h3>
+      <p id="info-expeditions"></p>
+    </div>
+    <div class="info-section">
+      <h3>Biography</h3>
+      <p id="info-bio"></p>
+    </div>
+    <div class="info-section">
+      <h3>Relationships</h3>
+      <ul id="info-relations" class="relations-list"></ul>
+    </div>
+  </div>
 
-<div>
-<script src="https://d3js.org/d3.v3.js"></script>
+  <script type="text/javascript">
+    // Available expedition titles for reference:
+    // - Terra Nova
+    // - Discovery
+    // - Endurance
+    // - Ross Sea Party
+    // - Quest
+    // - Australasian Antarctic Expedition
+    // - Nimrod
+    // - Fram (1910)
+    // - Fram (1893)
+    // - Gjøa
+    // - Maud
+    // - Belgica
+    // - British Arctic Expedition (1925)
+    // - BANZARE
 
+    // Person information database (placeholder data - fill in manually later)
+    var personInfo = {
+      "Scott": {
+        fullName: "Robert Falcon Scott",
+        photo: "https://collectionimages.npg.org.uk/large/mw253171/Robert-Falcon-Scott.jpg",
+        lifespan: "1868-1912",
+        expeditions: ["Discovery", "Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. British Royal Navy officer and explorer who led two expeditions to the Antarctic regions."
+      },
+      "Wilson": {
+        fullName: "Edward Adrian Wilson",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Edward_A._Wilson.jpg/500px-Edward_A._Wilson.jpg",
+        lifespan: "1872-1912",
+        expeditions: ["Discovery", "Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. English polar explorer, physician, naturalist, and ornithologist."
+      },
+      "ADG": {
+        fullName: "Adrien de Gerlache",
+        photo: "https://amundsen.mia.no/wp-content/uploads/2020/05/Adrien-de-Gerlache.jpg",
+        lifespan: "1866-1934",
+        expeditions: ["Belgica"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Algarsson": {
+        fullName: "Grettir Algarsson",
+        photo: "https://via.placeholder.com/200?text=Algarsson",
+        lifespan: "",
+        expeditions: ["British Arctic Expedition (1925)"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Amundsen": {
+        fullName: "Roald Amundsen",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Amundsen_in_fur_skins.jpg",
+        lifespan: "1872-1928",
+        expeditions: ["Fram (1910)", "Gjøa", "Maud"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Arctowski": {
+        fullName: "Henryk Arctowski",
+        photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0R757qUPiHqTGtmEDmzIkp2WFoB3D9ZSqMQ&s",
+        lifespan: "1871-1958",
+        expeditions: ["Belgica"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Atch": {
+        fullName: "Edward Leicester Atkinson",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/biography/Dr-Edward-Atkinson.webp",
+        lifespan: "1881-1929",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Bakewell": {
+        fullName: "William Bakewell",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/william-bakewell-sm.jpg",
+        lifespan: "1888-1969",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        filterOnly: true
+      },
+      "Birdie": {
+        fullName: "Henry Robertson 'Birdie' Bowers",
+        photo: "https://media.journoportfolio.com/users/48870/images/1cc56845-d25a-4d9d-b0d9-c0cdb9833fd8.jpeg",
+        lifespan: "1883-1912",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Blackborow": {
+        fullName: "Perce Blackborow",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/b/b1/Mrschippy.jpg",
+        lifespan: "1894-1949",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Cherry": {
+        fullName: "Apsley Cherry-Garrard",
+        photo: "https://alchetron.com/cdn/apsley-cherry-garrard-c01eafa6-492d-4921-924f-7ee0184d848-resize-750.jpeg",
+        lifespan: "1886-1959",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Clark": {
+        fullName: "Robert Selbie Clark",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Robert_Clark.jpg",
+        lifespan: "1882-1950",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Cook": {
+        fullName: "Frederick Albert Cook",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Picture_of_Frederick_Cook.jpg/250px-Picture_of_Frederick_Cook.jpg",
+        lifespan: "1865-1940",
+        expeditions: ["Belgica"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Crean": {
+        fullName: "Tom Crean",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Tom_Crean.jpg/250px-Tom_Crean.jpg",
+        lifespan: "1877-1938",
+        expeditions: ["Discovery", "Terra Nova", "Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Deb": {
+        fullName: "Frank Debenham",
+        photo: "https://64.media.tumblr.com/c4b4c324ea7ab1c78d943339a9abd3c3/e8e18f2bb3ddcc1b-e4/s640x960/cdc138d9efa6bb05355e4aba032ebd9f85146793.pnj",
+        lifespan: "1883-1965",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Evans": {
+        fullName: "Edgar 'Taff' Evans",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/5/52/Edgar_Evans.jpg",
+        lifespan: "1876-1912",
+        expeditions: ["Discovery", "Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Gran": {
+        fullName: "Tryggve Gran",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Tryggve_Gran%2C_ca._1912-1913.jpg/500px-Tryggve_Gran%2C_ca._1912-1913.jpg",
+        lifespan: "1888-1980",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Griff": {
+        fullName: "Thomas Griffith Taylor",
+        photo: "https://64.media.tumblr.com/364c012ce199b9efce59eaaf349526d4/e8e18f2bb3ddcc1b-b4/s640x960/3375e90a27226151be6c8084dd57fd61822dc599.pnj",
+        lifespan: "1880-1963",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Hilda": {
+        fullName: "Hilda Evans, née Russell",
+        photo: "https://via.placeholder.com/200?text=Hilda",
+        lifespan: "1883-1913",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "How": {
+        fullName: "Walter How",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/biography/How-1905.webp",
+        lifespan: "1885-1972",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        filterOnly: true,
+      },
+      "Hurley": {
+        fullName: "James Francis 'Frank' Hurley",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/0/09/James_Francis_Hurley.png",
+        lifespan: "1885-1962",
+        expeditions: ["Australasian Antarctic Expedition", "Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Hussey": {
+        fullName: "Leonard Hussey",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Leonard_Hussey.jpg/500px-Leonard_Hussey.jpg",
+        lifespan: "1891-1964",
+        expeditions: ["Endurance", "Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "James": {
+        fullName: "Reginald William James",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/4/41/Reginald_James.png",
+        lifespan: "1891-1964",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Johansen": {
+        fullName: "Hjalmar Johansen",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Fredrik_Hjalmar_Johansen.jpg",
+        lifespan: "1867-1913",
+        expeditions: ["Fram (1910)"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Kathleen": {
+        fullName: "Kathleen Scott, née Bruce",
+        photo: "https://spectator.com/wp-content/uploads/2022/04/Kathleen-Getty.jpg",
+        lifespan: "1878-1947",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Lashly": {
+        fullName: "William Lashly",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/William_Lashly%2C_November_1911.jpg/500px-William_Lashly%2C_November_1911.jpg",
+        lifespan: "1867-1940",
+        expeditions: ["Discovery", "Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Lecointe": {
+        fullName: "Georges Lecointe",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Au_pays_des_manchots_%28Page_27%29_BHL47098447_%28cropped%29.jpg/500px-Au_pays_des_manchots_%28Page_27%29_BHL47098447_%28cropped%29.jpg",
+        lifespan: "1869-1929",
+        expeditions: ["Belgica"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Lillie": {
+        fullName: "Denis Gascoigne Lillie",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/d/d7/D._G._Lillie_with_siliceous_sponges.jpg",
+        lifespan: "1884-1963",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Macklin": {
+        fullName: "Alexander Hepburne Macklin",
+        photo: "https://www.researchgate.net/publication/301947109/figure/fig2/AS:895434360881154@1590499596399/Dr-Alexander-Macklin-Reproduced-with-permission-from-the-Macklin-family.ppm",
+        lifespan: "1889-1967",
+        expeditions: ["Endurance", "Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Marr": {
+        fullName: "James William Slessor Marr",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Operation_Tabarin._James_Marr_%28BAS_AD6_1_19_A55_cropped%29.jpg/500px-Operation_Tabarin._James_Marr_%28BAS_AD6_1_19_A55_cropped%29.jpg",
+        lifespan: "1902-1965",
+        expeditions: ["Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Mawson": {
+        fullName: "Douglas Mawson",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/8/8f/Douglas_Mawson_1914_1.jpeg",
+        lifespan: "1882-1958",
+        expeditions: ["Nimrod", "Australasian Antarctic Expedition"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "McIlroy": {
+        fullName: "James McIlroy",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/biography/mcilroy.webp",
+        lifespan: "1879-1968",
+        expeditions: ["Endurance", "Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Meares": {
+        fullName: "Cecil Meares",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Cecil_Meares.jpg/500px-Cecil_Meares.jpg",
+        lifespan: "1877-1937",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Mertz": {
+        fullName: "Xavier Mertz",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/Xavier-Mertz.webp",
+        lifespan: "1882-1913",
+        expeditions: ["Australasian Antarctic Expedition"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Nansen": {
+        fullName: "Fridtjof Nansen",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/9/9b/Fridtjof_Nansen_LOC_03377u-3.jpg",
+        lifespan: "1861-1930",
+        expeditions: ["Fram (1893)"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Nelson": {
+        fullName: "Edward William 'Marie' Nelson",
+        photo: "https://64.media.tumblr.com/ed80e671bb5ec17d113cd0662c77b94d/96e0db4af67e0673-45/s1280x1920/e72988d5ecb2144b92e46234d8f97fffd1bacbd3.pnj",
+        lifespan: "1883-1923",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Ninnis": {
+        fullName: "Belgrave Edward Sutton Ninnis",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/b/b9/Belgrave_Ninnis.jpg",
+        lifespan: "1887-1912",
+        expeditions: ["Australasian Antarctic Expedition"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Oates": {
+        fullName: "Lawrence Edward Grace 'Titus' Oates",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Lawrence_Oates_c1911.jpg/500px-Lawrence_Oates_c1911.jpg",
+        lifespan: "1880-1912",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Oriana": {
+        fullName: "Oriana Wilson, née Souper",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Oriana_Souper_Wilson.jpg",
+        lifespan: "1974-1945",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Pennell": {
+        fullName: "Harry Lewin Lee Pennell",
+        photo: "https://64.media.tumblr.com/b607204846f934618ee77c42164f1fa0/515c4977ec4fd335-07/s640x960/38e840fbb42b2b0f8e04dcc52b3f56dab5bc58dd.pnj",
+        lifespan: "1882-1916",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Ponting": {
+        fullName: "Herbert Ponting",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/biography/ponting-darkroom.webp",
+        lifespan: "1870-1935",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Priestley": {
+        fullName: "Raymond Edward Priestley",
+        photo: "https://www.spriprints.com/p/645/raymond-edward-priestley-11605905.jpg.webp",
+        lifespan: "1886-1974",
+        expeditions: ["Nimrod", "Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Raco": {
+        fullName: "Emil Racoviță",
+        photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXzV-WUSmNAqOEqedoe8C5JFs9n-3YNt23d459hfH7TYlN2jNW5F_lLdLLdTO3DxR9DaZ9JG-OPlCx80E-e9dRf4BnRRF46Y43gul6xtc&s=10",
+        lifespan: "1868-1947",
+        expeditions: ["Belgica"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Shackles": {
+        fullName: "Ernest Shackleton",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Ernest_Shackleton_before_1909.jpg/500px-Ernest_Shackleton_before_1909.jpg",
+        lifespan: "1874-1922",
+        expeditions: ["Discovery", "Endurance", "Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Silas": {
+        fullName: "Charles Seymour 'Silas' Wright",
+        photo: "https://nzaht.org/wp-content/uploads/2019/04/Charles-Wright.jpg",
+        lifespan: "1887-1975",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Teddy": {
+        fullName: "Edward Ratcliffe Garth Russell Evans",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Commander_Evans_5126121136_99388b2868_o.jpg/500px-Commander_Evans_5126121136_99388b2868_o.jpg",
+        lifespan: "1880-1957",
+        expeditions: ["Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Wild": {
+        fullName: "Frank Wild",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/a/a0/FrankWild.png",
+        lifespan: "1873-1939",
+        expeditions: ["Discovery","Nimrod", "Australasian Antarctic Expedition", "Endurance", "Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Wisting": {
+        fullName: "Oscar Wisting",
+        photo: "https://frammuseum.no/filarkiv/explorers/oscar_wisting_9407-00799_large.jpg",
+        lifespan: "1871-1936",
+        expeditions: ["Fram (1910)", "Maud"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Wordie": {
+        fullName: "James 'Jock' Wordie",
+        photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwJiYKg43SCbwQ038WdtUUj8QR7jwP8KOuYg&s",
+        lifespan: "1889-1962",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Worsley": {
+        fullName: "Frank Arthur Worsley",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/a/af/Frank_Worsley.jpg",
+        lifespan: "1872-1943",
+        expeditions: ["Endurance", "Quest"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Day": {
+        fullName: "Bernard Day",
+        photo: "https://www.coolantarctica.com/Antarctica%20fact%20file/History/Bernard_C_Day-lg.webp",
+        lifespan: "",
+        expeditions: ["Nimrod","Terra Nova"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Joyce": {
+        fullName: "Ernest Joyce",
+        photo: "https://64.media.tumblr.com/1ad092026f91caa07eff7460fed26242/e8e18f2bb3ddcc1b-43/s500x750/fec6eabbb1f9b6697822b3e5cdfeeede2fd5da92.pnj",
+        lifespan: "1875-1940",
+        expeditions: ["Discovery","Nimrod", "Ross Sea Party"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Mackay": {
+        fullName: "Alistair Forbes Mackay",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/5/50/Alistair_Mackay%2C_1907.jpg",
+        lifespan: "1878-1914",
+        expeditions: ["Nimrod", "Karluk"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Mackintosh": {
+        fullName: "Aeneas Mackintosh",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Aeneas_LA_Mackintosh.jpg/500px-Aeneas_LA_Mackintosh.jpg",
+        lifespan: "1879-1916",
+        expeditions: ["Nimrod", "Ross Sea Party"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Marston": {
+        fullName: "George 'Putty' Marston",
+        photo: "https://64.media.tumblr.com/902cf07394cd60268289d66bcfd17660/e8e18f2bb3ddcc1b-5c/s1280x1920/5aa597202d50d8df1940e83979069b38e7485604.pnj",
+        lifespan: "",
+        expeditions: ["Nimrod", "Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "Murray": {
+        fullName: "James Murray",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Shackleton_nimrod_83.jpg/500px-Shackleton_nimrod_83.jpg",
+        lifespan: "1865-1914",
+        expeditions: ["Nimrod", "Karluk"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+      "The Prof": {
+        fullName: "Tannatt William Edgeworth 'The Prof' David",
+        photo: "https://seahamsharedpathways.com.au/wp-content/uploads/2023/03/Tannatt-William-Edgeworth-David_REF-00046353.jpg",
+        lifespan: "1858-1934",
+        expeditions: ["Nimrod"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
 
-<script>
-    var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-  
-  
+      "Orde-Lees": {
+        fullName: "Thomas Hans Orde-Lees",
+        photo: "https://upload.wikimedia.org/wikipedia/commons/e/e2/Orde-lees.jpg",
+        lifespan: "1877-1958",
+        expeditions: ["Endurance"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      }
+    };
 
+    // Function to get person info or return defaults
+    function getPersonInfo(nickname) {
+      if (personInfo[nickname]) {
+        return personInfo[nickname];
+      }
+      return {
+        fullName: nickname, // Default to nickname if not found
+        photo: "https://via.placeholder.com/200?text=" + encodeURIComponent(nickname),
+        lifespan: "Lorem ipsum",
+        expeditions: ["Discovery"], // Default placeholder expedition
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+      };
+    }
+
+    // Function to get relationships for a person
+    function getRelationships(nickname, nodeMap, links) {
+      var relationships = [];
+      links.forEach(function(link) {
+        if (link.source === nickname) {
+          relationships.push({
+            name: link.target,
+            type: link.type,
+            direction: "to"
+          });
+        } else if (link.target === nickname) {
+          relationships.push({
+            name: link.source,
+            type: link.type,
+            direction: "from"
+          });
+        }
+      });
+      return relationships;
+    }
+
+    // Function to show info pane (needs network and nodeMap in scope)
+    var currentNetwork = null;
+    var currentNodeMap = null;
+    var currentLinks = null;
+
+    function showInfoPane(nickname, nodeMap, links, network) {
+      currentNetwork = network;
+      currentNodeMap = nodeMap;
+      currentLinks = links;
+      
+      var info = getPersonInfo(nickname);
+      var relationships = getRelationships(nickname, nodeMap, links);
+      
+      document.getElementById("info-photo").src = info.photo;
+      document.getElementById("info-photo").alt = info.fullName;
+      // Combine full name and lifespan into one line
+      var fullNameLifespan = info.fullName;
+      if (info.lifespan && info.lifespan.trim() !== "") {
+        fullNameLifespan += " (" + info.lifespan + ")";
+      }
+      document.getElementById("info-fullname-lifespan").textContent = fullNameLifespan;
+      document.getElementById("info-expeditions").textContent = info.expeditions.join(", ");
+      document.getElementById("info-bio").textContent = info.bio;
+      
+      // Populate relationships list with clickable names
+      var relationsList = document.getElementById("info-relations");
+      relationsList.innerHTML = "";
+      if (relationships.length === 0) {
+        var li = document.createElement("li");
+        li.textContent = "No relationships found";
+        li.style.color = "#999";
+        relationsList.appendChild(li);
+      } else {
+        relationships.forEach(function(rel) {
+          var li = document.createElement("li");
+          var nameSpan = document.createElement("span");
+          nameSpan.className = "relation-name";
+          nameSpan.textContent = rel.name;
+          nameSpan.style.cursor = "pointer";
+          nameSpan.style.textDecoration = "underline";
+          nameSpan.style.color = "#0066cc";
+          nameSpan.onclick = function() {
+            // Switch to clicked person's pane
+            showInfoPane(rel.name, nodeMap, links, network);
+            // Highlight the node in the network
+            if (network && nodeMap[rel.name]) {
+              var nodeId = nodeMap[rel.name].id;
+              network.selectNodes([nodeId]);
+              network.focus(nodeId, {
+                scale: 1.2,
+                animation: {
+                  duration: 500,
+                  easingFunction: "easeInOutQuad"
+                }
+              });
+            }
+          };
+          var typeSpan = document.createElement("span");
+          typeSpan.className = "relation-type";
+          typeSpan.textContent = " — " + rel.type;
+          li.appendChild(nameSpan);
+          li.appendChild(typeSpan);
+          relationsList.appendChild(li);
+        });
+      }
+      
+      document.getElementById("info-pane").classList.add("visible");
+    }
+
+    // Function to close info pane
+    function closeInfoPane() {
+      document.getElementById("info-pane").classList.remove("visible");
+    }
+
+    // Filter menu functionality
+    var selectedExpedition = null;
+
+    // Extract all unique expeditions from personInfo
+    function getAllExpeditions() {
+      var expeditionsSet = {};
+      Object.keys(personInfo).forEach(function(nickname) {
+        var person = personInfo[nickname];
+        if (person.expeditions && Array.isArray(person.expeditions)) {
+          person.expeditions.forEach(function(exp) {
+            if (exp && exp.trim() !== "") {
+              expeditionsSet[exp] = true;
+            }
+          });
+        }
+      });
+      return Object.keys(expeditionsSet).sort();
+    }
+
+    // Toggle filter menu visibility
+    function toggleFilterMenu() {
+      var menuContent = document.getElementById("filter-menu-content");
+      var header = document.getElementById("filter-menu-header");
+      menuContent.classList.toggle("visible");
+      if (menuContent.classList.contains("visible")) {
+        header.textContent = "Filter by Expedition ▼";
+      } else {
+        header.textContent = "Filter by Expedition ▶";
+      }
+    }
+
+    // Original links array with all relationships
 var links = [
   {source: "Scott", target: "Wilson", type: "soulmates", value:"100"},
   {source: "Scott", target: "Kathleen", type: "married"},
@@ -53,7 +798,7 @@ var links = [
   {source: "Atch", target: "Pennell", type: "literally in love"},
   {source: "Atch", target: "Oates", type: "max & climax"},
   {source: "Oates", target: "Meares", type: "horse"},
-  {source: "Deb", target: "Evans", type: "big fat crush"}
+      {source: "Deb", target: "Evans", type: "big fat crush"},
   {source: "Cherry", target: "Oates", type: "popgun incident"},
   {source: "Wilson", target: "Mawson", type: "dislike"},
   {source: "Kathleen", target: "Nansen", type: "if you believe roland"},
@@ -82,8 +827,8 @@ var links = [
      {source: "Mertz", target: "Ninnis", type: "soulmates"},
  {source: "ADG", target: "Cook", type: "penguin forcefeeding"},
    {source: "ADG", target: "Lecointe", type: "loyal attack dog"},
-   {source: "Racovitza", target: "Lecointe", type: "lying with his full weight on top of him"},
-     {source: "Racovitza", target: "Arctowski", type: "ass-centric caricature"},
+   {source: "Raco", target: "Lecointe", type: "lying with his full weight on top of him"},
+     {source: "Raco", target: "Arctowski", type: "ass-centric caricature"},
     {source: "Shackles", target: "Worsley", type: "voyage of the caird"},
       {source: "Shackles", target: "Crean", type: "voyage of the caird"},
         {source: "Crean", target: "Teddy", type: "deeply romantic rescue"},
@@ -96,15 +841,14 @@ var links = [
      {source: "Silas", target: "Lillie", type: "cambridge"},
        {source: "Griff", target: "Lillie", type: "cambridge"},
          {source: "Lillie", target: "Deb", type: "cambridge"},
-
     {source: "Wild", target: "Worsley", type: "RIP BOSS"},
       {source: "Macklin", target: "Worsley", type: "especial pals"},
      {source: "Macklin", target: "Atch", type: "SCURVY?!?!?"},
      {source: "Scott", target: "Arctowski", type: "competing expedition LOL JK HAHA"},
     {source: "Cherry", target: "Pennell", type: "gay commiseration"},
    {source: "Gran", target: "Deb", type: "one sided crush"},
+      {source: "Deb", target: "Gran", type: "he's just this guy you know"},
      {source: "Teddy", target: "Gran", type: "harem member"},
-       {source: "Teddy", target: "Nelson", type: "harem member"},
          {source: "Teddy", target: "Nelson", type: "harem member"},
    {source: "Griff", target: "Nelson", type: "debate me"},
           {source: "Amundsen", target: "Johansen", type: "did not end well"},
@@ -112,171 +856,367 @@ var links = [
       {source: "Macklin", target: "Hussey", type: "alphonse & d'aubrey"},
         {source: "Macklin", target: "Marr", type: "that's his son"},
          {source: "Worsley", target: "Marr", type: "that's his son"},
-  
-        {source: "Wordie", target: "Deb", type: "peepaw rivalry"},
+        {source: "Wordie", target: "Deb", type: "peepaw heated rivalry"},
      {source: "Hussey", target: "Wordie", type: "the joplittle of endurance"},
     {source: "Amundsen", target: "Wisting", type: "best boy"},
        {source: "Wordie", target: "Clark", type: "if you believe michael smith"},
-  
          {source: "Blackborow", target: "Shackles", type: "baby on board"},
            {source: "Blackborow", target: "Bakewell", type: "stowaway soulmates"},
-  
         {source: "McIlroy", target: "Wild", type: "colonialism bfs"},
         {source: "McIlroy", target: "Macklin", type: "doctor bj bros"},
-
        {source: "Hussey", target: "McIlroy", type: "billabong boys"},
          {source: "McIlroy", target: "Hurley", type: "billabong boys"},
        {source: "Hussey", target: "Hurley", type: "billabong boys"},
-
          {source: "Ponting", target: "Meares", type: "he's in this relationship"},
-
            {source: "Wordie", target: "James", type: "cambridge"},
       {source: "Bakewell", target: "How", type: "shipboard pals"},
         {source: "James", target: "Hurley", type: "quote satellite unquote"},
           {source: "Algarsson", target: "Worsley", type: "boy about to pounce"},
-       {source: "Algarsson", target: "Amundsen", type: "aborted rescue attempt"}
+       {source: "Algarsson", target: "Amundsen", type: "aborted rescue attempt"},
+       {source: "Priestley", target: "Marston", type: "oh that's...."},
+       {source: "Wild", target: "Priestley", type: "male nurse duties"},
+       {source: "Joyce", target: "Priestley", type: "male nurse duties"},
+       {source: "Day", target: "Priestley", type: "baby besties"},
+       {source: "Joyce", target: "Mackintosh", type: "behated boss"},
+       {source: "Mackay", target: "The Prof", type: "ankle-kicking"},
+       {source: "The Prof", target: "Mawson", type: "looking at rocks together"},
+       {source: "Priestley", target: "The Prof", type: "behated boss"},
+       {source: "Day", target: "Lashly", type: "REV UP THE BUGATTI"},
+  {source: "Mackay", target: "Murray", type: "folie a deux"},
+  {source: "Hussey", target: "Marston", type: "don't let him take that laudanum"},
+  {source: "Marston", target: "Shackles", type: "friendship ended with bilson now putty is my favorite artist"},
+  {source: "Orde-Lees", target: "James", type: "nightmare roomies"},
+    ];
 
-  
-
-
-
-
-  
-
-  
-];
-
-var nodes = {};
-
-// Compute the distinct nodes from the links.
+    // Calculate node weights (connection counts)
+    var nodeCounts = {};
 links.forEach(function(link) {
-  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
-  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
-});
+      nodeCounts[link.source] = (nodeCounts[link.source] || 0) + 1;
+      nodeCounts[link.target] = (nodeCounts[link.target] || 0) + 1;
+    });
 
-var width = 1920,
-    height = 900;
-
-var force = d3.layout.force()
-    .nodes(d3.values(nodes))
-    .links(links)
-    .size([width, height])
-    .linkDistance(220)
-    .charge(-270)
-    .on("tick", tick)
-    .start();
-
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-var link = svg.selectAll(".link")
-    .data(force.links())
-  .enter()
-    .append("g")
-    .attr("class", "link")
-    .append("line")
-    .attr("class", "link-line");
-
-var node = svg.selectAll(".node")
-    .data(force.nodes())
-  .enter().append("g")
-    .attr("class", "node")
-    .on("mouseover", mouseover)
-    .on("mouseout", mouseout)
-    .call(force.drag);
-  
-
-
-node.append("circle")
-  .attr("r", function(d) {      
-     d.weight = link.filter(function(l) {
-       return l.source.index == d.index || l.target.index == d.index
-     }).size();      
-     var minRadius = 10;
-     return minRadius + (d.weight * 2);
-   })
-      .style("fill", function(d) {
- 
-  
-  if(d.weight > 4) {
-       return "#d95955";
-   
-  
-  } else if((d.weight >= 3) && (d.weight <= 4)) {
-         
-             
-          return "#e8a854";
-    } else  { 
+    // Create nodes array with sizing and coloring
+    // First pass: create all nodes (including filter-only ones)
+    var allNodesArray = [];
+    var allNodeMap = {};
+    var nodeIndex = 0;
+    Object.keys(nodeCounts).forEach(function(name) {
+      var weight = nodeCounts[name];
+      var minRadius = 20;
+      var size = minRadius + (weight * 5);
+      
+      // Color based on weight (same logic as original)
+      var color;
+      if (weight > 4) {
+        color = "#d95955"; // red
+      } else if (weight >= 3 && weight <= 4) {
+        color = "#e8a854"; // orange
+      } else {
+        color = "#f0dc84"; // yellow
+      }
+      
+      var node = {
+        id: nodeIndex,
+        label: name,
+        value: size,
+        color: {
+          background: color,
+          border: "#fff",
+          highlight: {
+            background: color,
+            border: "#fff"
+          }
+        },
+        font: {
+          size: 20
+        },
+        fixed: false
+      };
+      
+      allNodeMap[name] = node;
+      allNodesArray.push(node);
+      nodeIndex++;
+    });
     
-    return "#f0dc84";
-    
-  }
-    
- 
-});
+    // Second pass: filter out nodes that should be hidden by default (filterOnly)
+    var nodesArray = [];
+    var nodeMap = {};
+    allNodesArray.forEach(function(node) {
+      var person = personInfo[node.label];
+      // Include node if personInfo doesn't exist or if filterOnly is not true
+      if (!person || !person.filterOnly) {
+        nodeMap[node.label] = node;
+        nodesArray.push(node);
+      }
+    });
 
+    // Create a map to check for reverse relationships
+    var reverseLinkMap = {};
+    links.forEach(function(link) {
+      var key = link.source + "|" + link.target;
+      reverseLinkMap[key] = true;
+    });
 
-
-node.append("text")
-    .attr("dx", 12)
-    .attr("dy", ".35em")
-    .text(function(d) { return d.name; });
-
-var labelLine = svg.selectAll(".link")
-    .append("text")
-    .attr("class", "link-label")
-   .attr("font-family", "Arial, Helvetica, sans-serif")
-    .attr("fill", "Black")
-    .style("font", "normal 10px Courier")
-    .attr("dy", ".35em")
-    .attr("text-anchor", "middle")
-    .text(function(d) { return d.type; });
-
-function tick() {
-  link
-      .attr("x1", function(d) { return d.source.x; })
-      .attr("y1", function(d) { return d.source.y; })
-      .attr("x2", function(d) { return d.target.x; })
-      .attr("y2", function(d) { return d.target.y; });
-    
-  labelLine
-      .attr("x", function(d) {
-          return (d.source.x + d.target.x)/2; })
-      .attr("y", function(d) {
-          return (d.source.y + d.target.y)/2; });
+    // Convert links to vis.js format (from/to)
+    // Create all edges first (including those connected to filter-only nodes)
+    var allEdgesArray = [];
+    var edgesArray = [];
+    links.forEach(function(link) {
+      var fromNode = allNodeMap[link.source];
+      var toNode = allNodeMap[link.target];
+      
+      if (fromNode && toNode) {
+        // Check if there's a reverse relationship
+        var reverseKey = link.target + "|" + link.source;
+        var hasReverse = reverseLinkMap[reverseKey] || false;
         
+        // Set arrows based on direction - ONLY show arrows for bidirectional relationships
+        var edgeData = {
+          from: fromNode.id,
+          to: toNode.id,
+          label: link.type,
+          font: {
+            size: 14,
+            align: "middle"
+          },
+          color: {
+            color: "#666"
+          }
+        };
+        
+        // Only add arrows if there's a bidirectional relationship
+        // Each edge shows one arrow pointing from source to target
+        if (hasReverse) {
+          edgeData.arrows = {
+            to: {
+              enabled: true,
+              scaleFactor: 0.5,
+              type: "arrow"
+            }
+          };
+        }
+        
+        // Always add to allEdgesArray
+        allEdgesArray.push(edgeData);
+        
+        // Only add to edgesArray if both nodes are visible (not filterOnly)
+        if (nodeMap[link.source] && nodeMap[link.target]) {
+          edgesArray.push(edgeData);
+        }
+      }
+    });
 
-  node
-      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-}
+    // Create the network
+    var container = document.getElementById('network');
+    var data = {
+      nodes: new vis.DataSet(nodesArray),
+      edges: new vis.DataSet(edgesArray)
+    };
 
+    var options = {
+      physics: {
+        enabled: true,
+        stabilization: {
+          enabled: true,
+          iterations: 100
+        },
+        barnesHut: {
+          gravitationalConstant: -1500,
+          centralGravity: 0.05,
+          springLength: 200,
+          springConstant: 0.08,
+          damping: 0.3
+        }
+      },
+      interaction: {
+        dragNodes: true,
+        dragView: true,
+        zoomView: true
+      },
+      nodes: {
+        shape: 'dot',
+        borderWidth: 1.5,
+        shadow: false
+      },
+      edges: {
+        width: 1.5,
+        smooth: {
+          type: 'continuous'
+        }
+      }
+    };
 
-  
- function mouseover() {
-  d3.select(this).select("circle").transition()
-      .duration(750)
-      .attr("r", function(d) {      
-     d.weight = link.filter(function(l) {
-       return l.source.index == d.index || l.target.index == d.index
-     }).size();      
-     var minRadius = 10;
-     return minRadius + (d.weight * 4);
-   });
- }
+    var network = new vis.Network(container, data, options);
 
- function mouseout() {
-  d3.select(this).select("circle").transition()
-     .duration(750)
-     .attr("r", function(d) {      
-     d.weight = link.filter(function(l) {
-       return l.source.index == d.index || l.target.index == d.index
-     }).size();      
-     var minRadius = 10;
-     return minRadius + (d.weight * 2);
-   });
- }
+    // Filter functions (defined after network creation so they can access network and data)
+    function filterByExpedition(expedition) {
+      selectedExpedition = expedition;
+      
+      // Find people in this expedition (including filter-only people)
+      var peopleInExpedition = {};
+      Object.keys(personInfo).forEach(function(nickname) {
+        var person = personInfo[nickname];
+        if (person.expeditions && person.expeditions.indexOf(expedition) !== -1) {
+          peopleInExpedition[nickname] = true;
+        }
+      });
+      
+      // Use allNodesArray and allEdgesArray to include filter-only people
+      // Filter nodes - only show people in this expedition (including filter-only)
+      var filteredNodes = allNodesArray.filter(function(node) {
+        return peopleInExpedition[node.label] === true;
+      });
+      
+      // Filter edges - only show connections between filtered people
+      var filteredPeopleSet = {};
+      filteredNodes.forEach(function(node) {
+        filteredPeopleSet[node.label] = true;
+      });
+      
+      var filteredEdges = allEdgesArray.filter(function(edge) {
+        // Find the nodes by their IDs
+        var fromNode = allNodesArray.find(function(n) { return n.id === edge.from; });
+        var toNode = allNodesArray.find(function(n) { return n.id === edge.to; });
+        return fromNode && toNode && 
+               filteredPeopleSet[fromNode.label] && 
+               filteredPeopleSet[toNode.label];
+      });
+      
+      // Update network data
+      data.nodes.clear();
+      data.edges.clear();
+      data.nodes.add(filteredNodes);
+      data.edges.add(filteredEdges);
+      
+      // Update selected state in menu
+      var options = document.querySelectorAll("#filter-menu-content .filter-option:not(.clear)");
+      options.forEach(function(opt) {
+        if (opt.textContent === expedition) {
+          opt.classList.add("selected");
+        } else {
+          opt.classList.remove("selected");
+        }
+      });
+    }
 
+    function clearFilter() {
+      selectedExpedition = null;
+      
+      // Restore all nodes and edges
+      data.nodes.clear();
+      data.edges.clear();
+      data.nodes.add(nodesArray);
+      data.edges.add(edgesArray);
+      
+      // Update selected state in menu
+      var options = document.querySelectorAll("#filter-menu-content .filter-option:not(.clear)");
+      options.forEach(function(opt) {
+        opt.classList.remove("selected");
+      });
+    }
 
-</script></div>
+    // Populate filter menu with expeditions (after filter functions are defined)
+    function populateFilterMenu() {
+      var expeditions = getAllExpeditions();
+      var menuContent = document.getElementById("filter-menu-content");
+      
+      // Clear existing options
+      menuContent.innerHTML = "";
+      
+      expeditions.forEach(function(expedition) {
+        var option = document.createElement("div");
+        option.className = "filter-option";
+        option.textContent = expedition;
+        option.onclick = function() {
+          filterByExpedition(expedition);
+        };
+        menuContent.appendChild(option);
+      });
+      
+      // Add clear option at the end
+      var clearOption = document.createElement("div");
+      clearOption.className = "filter-option clear";
+      clearOption.textContent = "Clear Filter";
+      clearOption.onclick = clearFilter;
+      menuContent.appendChild(clearOption);
+    }
+
+    // Initialize filter menu
+    populateFilterMenu();
+
+    // Set initial zoom to show a closer view after stabilization
+    network.once("stabilizationEnd", function() {
+      network.moveTo({
+        scale: 1.5,
+        animation: {
+          duration: 500,
+          easingFunction: "easeInOutQuad"
+        }
+      });
+    });
+
+    // Temporarily unfix nodes when dragging starts so they can be moved
+    network.on("dragStart", function(params) {
+      if (params.nodes.length > 0) {
+        params.nodes.forEach(function(nodeId) {
+          data.nodes.update({
+            id: nodeId,
+            fixed: false
+          });
+        });
+      }
+    });
+
+    // Fix nodes in place when dragging ends
+    network.on("dragEnd", function(params) {
+      if (params.nodes.length > 0) {
+        params.nodes.forEach(function(nodeId) {
+          var nodeData = data.nodes.get(nodeId);
+          if (nodeData) {
+            var positions = network.getPositions([nodeId]);
+            var position = positions[nodeId];
+            data.nodes.update({
+              id: nodeId,
+              x: position.x,
+              y: position.y,
+              fixed: {
+                x: true,
+                y: true
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Allow unfixing nodes by double-clicking (optional feature)
+    network.on("doubleClick", function(params) {
+      if (params.nodes.length > 0) {
+        params.nodes.forEach(function(nodeId) {
+          data.nodes.update({
+            id: nodeId,
+            fixed: false
+          });
+        });
+      }
+    });
+
+    // Show info pane when clicking on a node
+    network.on("click", function(params) {
+      if (params.nodes.length > 0) {
+        var nodeId = params.nodes[0];
+        var nodeData = data.nodes.get(nodeId);
+        if (nodeData) {
+          var nickname = nodeData.label;
+          showInfoPane(nickname, nodeMap, links, network);
+          // Highlight the clicked node
+          network.selectNodes([nodeId]);
+        }
+      } else {
+        // Click on background - close info pane
+        closeInfoPane();
+      }
+    });
+  </script>
 </body>
+</html>
