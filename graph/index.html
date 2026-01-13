@@ -57,28 +57,35 @@
     }
     #filter-menu-content {
       display: none;
+      flex-direction: column;
       padding: 12px;
       max-height: 400px;
       overflow-y: auto;
+      gap: 8px;
     }
     #filter-menu-content.visible {
-      display: block;
+      display: flex;
     }
     .filter-option {
-      padding: 8px 12px;
+      padding: 6px 12px;
       cursor: pointer;
       font-family: sans-serif;
       font-size: 14px;
-      color: #333;
-      border-radius: 4px;
-      margin-bottom: 4px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      display: inline-block;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.2s;
     }
     .filter-option:hover {
-      background-color: rgba(0, 0, 0, 0.05);
+      opacity: 0.8;
+      transform: scale(1.05);
     }
     .filter-option.selected {
-      background-color: #0066cc;
-      color: white;
+      opacity: 1;
+      transform: scale(1.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .filter-option.clear {
       font-weight: 600;
@@ -166,6 +173,32 @@
       color: #666;
       line-height: 1.5;
     }
+    /* Expedition lozenges/pills */
+    .expeditions-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .expedition-lozenge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+    .expedition-lozenge:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+    .expedition-lozenge.selected {
+      transform: scale(1.1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      opacity: 1;
+    }
     #info-pane .relations-list {
       list-style: none;
       padding: 0;
@@ -212,9 +245,9 @@
     <h2 id="info-fullname-lifespan"></h2>
     <div class="info-section">
       <h3>Expeditions</h3>
-      <p id="info-expeditions"></p>
+      <div id="info-expeditions" class="expeditions-container"></div>
     </div>
-    <div class="info-section">
+    <div class="info-section" id="bio-section" style="display: none;">
       <h3>Biography</h3>
       <p id="info-bio"></p>
     </div>
@@ -674,6 +707,54 @@
 
     };
 
+    // Function to get color for expedition lozenge
+    // Returns consistent colors based on expedition name
+    function getExpeditionColor(expedition) {
+      // Color palette: pastel backgrounds with darker text, or jewel tones with light text
+      var colorMap = {
+        "Terra Nova": { bg: "#FFE5E5", text: "#8B0000" }, // Light red / dark red
+        "Discovery": { bg: "#E5F3FF", text: "#003366" }, // Light blue / dark blue
+        "Endurance": { bg: "#FFF5E5", text: "#CC6600" }, // Light orange / dark orange
+        "Ross Sea Party": { bg: "#E5FFE5", text: "#006600" }, // Light green / dark green
+        "Quest": { bg: "#F0E5FF", text: "#4B0082" }, // Light purple / dark purple
+        "Australasian Antarctic Expedition": { bg: "#FFE5F0", text: "#8B0043" }, // Light pink / dark pink
+        "Nimrod": { bg: "#E5FFFF", text: "#008080" }, // Light cyan / dark teal
+        "Fram (1910)": { bg: "#E5E5FF", text: "#000080" }, // Light indigo / dark indigo
+        "Fram (1893)": { bg: "#FFE5CC", text: "#8B4513" }, // Light peach / dark brown
+        "Gjøa": { bg: "#E5FFE5", text: "#2E7D32" }, // Light green / dark green
+        "Maud": { bg: "#FFE5F5", text: "#880E4F" }, // Light rose / dark rose
+        "Belgica": { bg: "#E5F5FF", text: "#01579B" }, // Light sky / dark sky
+        "British Arctic Expedition (1925)": { bg: "#FFF0E5", text: "#E65100" }, // Light apricot / dark orange
+        "BANZARE": { bg: "#F5E5FF", text: "#6A1B9A" }, // Light lavender / dark purple
+        "Karluk": { bg: "#E5FFE5", text: "#1B5E20" } // Light mint / dark green
+      };
+      
+      // If expedition is in map, use that color
+      if (colorMap[expedition]) {
+        return colorMap[expedition];
+      }
+      
+      // Otherwise, generate a consistent color based on string hash
+      var hash = 0;
+      for (var i = 0; i < expedition.length; i++) {
+        hash = expedition.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      
+      // Use pastel colors with darker text
+      var pastels = [
+        { bg: "#FFE5E5", text: "#8B0000" }, // Red
+        { bg: "#E5F3FF", text: "#003366" }, // Blue
+        { bg: "#FFF5E5", text: "#CC6600" }, // Orange
+        { bg: "#E5FFE5", text: "#006600" }, // Green
+        { bg: "#F0E5FF", text: "#4B0082" }, // Purple
+        { bg: "#FFE5F0", text: "#8B0043" }, // Pink
+        { bg: "#E5FFFF", text: "#008080" }, // Cyan
+        { bg: "#E5E5FF", text: "#000080" }  // Indigo
+      ];
+      
+      return pastels[Math.abs(hash) % pastels.length];
+    }
+    
     // Function to get person info or return defaults
     function getPersonInfo(nickname) {
       if (personInfo[nickname]) {
@@ -730,7 +811,47 @@
         fullNameLifespan += " (" + info.lifespan + ")";
       }
       document.getElementById("info-fullname-lifespan").textContent = fullNameLifespan;
-      document.getElementById("info-expeditions").textContent = info.expeditions.join(", ");
+      
+      // Populate expeditions as clickable lozenges
+      var expeditionsContainer = document.getElementById("info-expeditions");
+      expeditionsContainer.innerHTML = "";
+      if (info.expeditions && info.expeditions.length > 0) {
+        info.expeditions.forEach(function(expedition) {
+          var lozenge = document.createElement("span");
+          lozenge.className = "expedition-lozenge";
+          lozenge.textContent = expedition;
+          
+          // Assign color based on expedition name (consistent colors)
+          var colors = getExpeditionColor(expedition);
+          lozenge.style.backgroundColor = colors.bg;
+          lozenge.style.color = colors.text;
+          
+          // Check if this expedition is currently selected
+          if (selectedExpedition && selectedExpedition.name === expedition) {
+            lozenge.classList.add("selected");
+          }
+          
+          // Make lozenge clickable to filter by expedition
+          lozenge.onclick = function(event) {
+            event.stopPropagation(); // Prevent event from bubbling
+            
+            // If this expedition is already selected, deselect it
+            if (selectedExpedition && selectedExpedition.name === expedition) {
+              clearFilter();
+            } else {
+              // Filter by this expedition and mark it as from card
+              filterByExpedition(expedition, true);
+            }
+            
+            // Update visual state of all lozenges in the card
+            updateExpeditionLozengeStates();
+          };
+          
+          expeditionsContainer.appendChild(lozenge);
+        });
+      }
+      
+      // Set bio (but section is hidden)
       document.getElementById("info-bio").textContent = info.bio;
       
       // Populate relationships list with clickable names
@@ -781,10 +902,46 @@
     // Function to close info pane
     function closeInfoPane() {
       document.getElementById("info-pane").classList.remove("visible");
+      // Clear filter when closing pane if it was activated from the card
+      if (selectedExpedition && selectedExpedition.fromCard) {
+        clearFilter();
+      }
     }
 
     // Filter menu functionality
-    var selectedExpedition = null;
+    var selectedExpedition = null; // { name: string, fromCard: boolean }
+    
+    // Function to update visual state of expedition lozenges in info pane
+    function updateExpeditionLozengeStates() {
+      var expeditionsContainer = document.getElementById("info-expeditions");
+      if (!expeditionsContainer) return;
+      
+      var lozenges = expeditionsContainer.querySelectorAll(".expedition-lozenge");
+      lozenges.forEach(function(lozenge) {
+        var expedition = lozenge.textContent;
+        if (selectedExpedition && selectedExpedition.name === expedition) {
+          lozenge.classList.add("selected");
+        } else {
+          lozenge.classList.remove("selected");
+        }
+      });
+    } // { name: string, fromCard: boolean }
+    
+    // Function to update visual state of expedition lozenges in info pane
+    function updateExpeditionLozengeStates() {
+      var expeditionsContainer = document.getElementById("info-expeditions");
+      if (!expeditionsContainer) return;
+      
+      var lozenges = expeditionsContainer.querySelectorAll(".expedition-lozenge");
+      lozenges.forEach(function(lozenge) {
+        var expedition = lozenge.textContent;
+        if (selectedExpedition && selectedExpedition.name === expedition) {
+          lozenge.classList.add("selected");
+        } else {
+          lozenge.classList.remove("selected");
+        }
+      });
+    }
 
     // Extract all unique expeditions from personInfo
     function getAllExpeditions() {
@@ -1100,8 +1257,11 @@ links.forEach(function(link) {
     var network = new vis.Network(container, data, options);
 
     // Filter functions (defined after network creation so they can access network and data)
-    function filterByExpedition(expedition) {
-      selectedExpedition = expedition;
+    function filterByExpedition(expedition, fromCard) {
+      selectedExpedition = {
+        name: expedition,
+        fromCard: fromCard || false
+      };
       
       // Find people in this expedition (including filter-only people)
       var peopleInExpedition = {};
@@ -1148,6 +1308,9 @@ links.forEach(function(link) {
           opt.classList.remove("selected");
         }
       });
+      
+      // Update lozenge states in info pane
+      updateExpeditionLozengeStates();
     }
 
     function clearFilter() {
@@ -1164,6 +1327,9 @@ links.forEach(function(link) {
       options.forEach(function(opt) {
         opt.classList.remove("selected");
       });
+      
+      // Update lozenge states in info pane
+      updateExpeditionLozengeStates();
     }
 
     // Populate filter menu with expeditions (after filter functions are defined)
@@ -1178,16 +1344,25 @@ links.forEach(function(link) {
         var option = document.createElement("div");
         option.className = "filter-option";
         option.textContent = expedition;
+        
+        // Apply lozenge colors using the same function as info pane
+        var colors = getExpeditionColor(expedition);
+        option.style.backgroundColor = colors.bg;
+        option.style.color = colors.text;
+        
         option.onclick = function() {
-          filterByExpedition(expedition);
+          filterByExpedition(expedition, false); // false = from menu, not card
         };
         menuContent.appendChild(option);
       });
       
-      // Add clear option at the end
+      // Add clear option at the end (keep it as a button style, not a lozenge)
       var clearOption = document.createElement("div");
       clearOption.className = "filter-option clear";
       clearOption.textContent = "Clear Filter";
+      clearOption.style.backgroundColor = "#f0f0f0";
+      clearOption.style.color = "#333";
+      clearOption.style.fontWeight = "600";
       clearOption.onclick = clearFilter;
       menuContent.appendChild(clearOption);
     }
