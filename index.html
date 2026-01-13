@@ -877,16 +877,17 @@
           // Format with directional arrows
           // If direction is "to", current person is source: "CurrentPerson → OtherPerson: type"
           // If direction is "from", current person is target: "OtherPerson → CurrentPerson: type"
+          var arrowChar = "→"; // Unicode arrow
           var displayText;
           var otherPersonName;
           
           if (rel.direction === "to") {
             // Current person is the source
-            displayText = nickname + " → " + rel.name + ": " + rel.type;
+            displayText = nickname + " " + arrowChar + " " + rel.name + ": " + rel.type;
             otherPersonName = rel.name;
           } else {
             // Current person is the target
-            displayText = rel.name + " → " + nickname + ": " + rel.type;
+            displayText = rel.name + " " + arrowChar + " " + nickname + ": " + rel.type;
             otherPersonName = rel.name;
           }
           
@@ -900,14 +901,14 @@
           relationshipSpan.style.color = "#333";
           
           // Parse the relationship part to make the other person's name clickable
-          var relationshipParts = relationshipPart.split(" → ");
+          var relationshipParts = relationshipPart.split(" " + arrowChar + " ");
           if (relationshipParts.length === 2) {
             var sourcePart = relationshipParts[0];
             var targetPart = relationshipParts[1];
             
             // If current person is source, make target clickable
             if (sourcePart === nickname) {
-              relationshipSpan.appendChild(document.createTextNode(nickname + " → "));
+              relationshipSpan.appendChild(document.createTextNode(nickname + " " + arrowChar + " "));
               var clickableName = document.createElement("span");
               clickableName.className = "relation-name";
               clickableName.textContent = targetPart;
@@ -958,7 +959,7 @@
                 }
               };
               relationshipSpan.appendChild(clickableName);
-              relationshipSpan.appendChild(document.createTextNode(" → " + nickname));
+              relationshipSpan.appendChild(document.createTextNode(" " + arrowChar + " " + nickname));
             }
           } else {
             // Fallback if parsing fails
