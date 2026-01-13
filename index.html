@@ -8,6 +8,18 @@
       width: 100vw;
       height: 100vh;
     }
+    
+    /* Style for circular image nodes to show upper portion */
+    .vis-network .vis-node .vis-network-circular-image {
+      object-fit: cover;
+      object-position: center 33%; /* Focus on upper 2/3rds (33% from top) */
+    }
+    
+    /* Alternative selector for vis.js image positioning */
+    .vis-network img.vis-network-circular-image {
+      object-fit: cover;
+      object-position: center 33%;
+    }
     #title-box {
       position: fixed;
       bottom: 20px;
@@ -898,6 +910,7 @@ var links = [
        {source: "Joyce", target: "Priestley", type: "male nurse duties"},
        {source: "Day", target: "Priestley", type: "baby besties"},
        {source: "Joyce", target: "Mackintosh", type: "behated boss"},
+       {source: "Joyce", target: "Wild", type: "THE BLOWJOB BROTHERS"},
        {source: "Mackay", target: "The Prof", type: "ankle-kicking"},
        {source: "The Prof", target: "Mawson", type: "looking at rocks together"},
        {source: "Priestley", target: "The Prof", type: "behated boss"},
@@ -958,6 +971,18 @@ links.forEach(function(link) {
         },
         fixed: false
       };
+      
+      // Check if person has a photo and use circularImage shape
+      var person = personInfo[name];
+      var photoUrl = person && person.photo ? person.photo : null;
+      
+      // If person has a photo, use circularImage shape (always enabled)
+      if (photoUrl) {
+        node.shape = 'circularImage';
+        node.image = photoUrl;
+        // Use brokenImage as fallback
+        node.brokenImage = photoUrl;
+      }
       
       allNodeMap[name] = node;
       allNodesArray.push(node);
