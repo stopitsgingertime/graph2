@@ -704,6 +704,14 @@
         filterOnly: true,
       },
 
+      "Doorly": {
+        fullName: "Gerald Doorly",
+        photo: "https://www.odt.co.nz/sites/default/files/styles/odt_portrait_medium_3_4/public/story/2017/11/captain_james_g_s_doorly_p.jpg?itok=GGd31EqQ",
+        lifespan: "1880-1956",
+        expeditions: ["Morning"],
+        bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      },
+
 
     };
 
@@ -865,32 +873,106 @@
       } else {
         relationships.forEach(function(rel) {
           var li = document.createElement("li");
-          var nameSpan = document.createElement("span");
-          nameSpan.className = "relation-name";
-          nameSpan.textContent = rel.name;
-          nameSpan.style.cursor = "pointer";
-          nameSpan.style.textDecoration = "underline";
-          nameSpan.style.color = "#0066cc";
-          nameSpan.onclick = function() {
-            // Switch to clicked person's pane
-            showInfoPane(rel.name, nodeMap, links, network);
-            // Highlight the node in the network
-            if (network && nodeMap[rel.name]) {
-              var nodeId = nodeMap[rel.name].id;
-              network.selectNodes([nodeId]);
-              network.focus(nodeId, {
-                scale: 1.2,
-                animation: {
-                  duration: 500,
-                  easingFunction: "easeInOutQuad"
+          
+          // Format with directional arrows
+          // If direction is "to", current person is source: "CurrentPerson → OtherPerson: type"
+          // If direction is "from", current person is target: "OtherPerson → CurrentPerson: type"
+          var displayText;
+          var otherPersonName;
+          
+          if (rel.direction === "to") {
+            // Current person is the source
+            displayText = nickname + " → " + rel.name + ": " + rel.type;
+            otherPersonName = rel.name;
+          } else {
+            // Current person is the target
+            displayText = rel.name + " → " + nickname + ": " + rel.type;
+            otherPersonName = rel.name;
+          }
+          
+          // Split the display text into parts for styling
+          var parts = displayText.split(": ");
+          var relationshipPart = parts[0]; // "Bashir → Kira"
+          var typePart = parts[1] || ""; // "once while under the influence"
+          
+          // Create spans for each part
+          var relationshipSpan = document.createElement("span");
+          relationshipSpan.style.color = "#333";
+          
+          // Parse the relationship part to make the other person's name clickable
+          var relationshipParts = relationshipPart.split(" → ");
+          if (relationshipParts.length === 2) {
+            var sourcePart = relationshipParts[0];
+            var targetPart = relationshipParts[1];
+            
+            // If current person is source, make target clickable
+            if (sourcePart === nickname) {
+              relationshipSpan.appendChild(document.createTextNode(nickname + " → "));
+              var clickableName = document.createElement("span");
+              clickableName.className = "relation-name";
+              clickableName.textContent = targetPart;
+              clickableName.style.cursor = "pointer";
+              clickableName.style.textDecoration = "underline";
+              clickableName.style.color = "#0066cc";
+              clickableName.style.fontWeight = "600";
+              clickableName.onclick = function() {
+                // Switch to clicked person's pane
+                showInfoPane(targetPart, nodeMap, links, network);
+                // Highlight the node in the network
+                if (network && nodeMap[targetPart]) {
+                  var nodeId = nodeMap[targetPart].id;
+                  network.selectNodes([nodeId]);
+                  network.focus(nodeId, {
+                    scale: 1.2,
+                    animation: {
+                      duration: 500,
+                      easingFunction: "easeInOutQuad"
+                    }
+                  });
                 }
-              });
+              };
+              relationshipSpan.appendChild(clickableName);
+            } else {
+              // Current person is target, make source clickable
+              var clickableName = document.createElement("span");
+              clickableName.className = "relation-name";
+              clickableName.textContent = sourcePart;
+              clickableName.style.cursor = "pointer";
+              clickableName.style.textDecoration = "underline";
+              clickableName.style.color = "#0066cc";
+              clickableName.style.fontWeight = "600";
+              clickableName.onclick = function() {
+                // Switch to clicked person's pane
+                showInfoPane(sourcePart, nodeMap, links, network);
+                // Highlight the node in the network
+                if (network && nodeMap[sourcePart]) {
+                  var nodeId = nodeMap[sourcePart].id;
+                  network.selectNodes([nodeId]);
+                  network.focus(nodeId, {
+                    scale: 1.2,
+                    animation: {
+                      duration: 500,
+                      easingFunction: "easeInOutQuad"
+                    }
+                  });
+                }
+              };
+              relationshipSpan.appendChild(clickableName);
+              relationshipSpan.appendChild(document.createTextNode(" → " + nickname));
             }
-          };
+          } else {
+            // Fallback if parsing fails
+            relationshipSpan.textContent = relationshipPart;
+          }
+          
+          // Add type part
           var typeSpan = document.createElement("span");
           typeSpan.className = "relation-type";
-          typeSpan.textContent = " — " + rel.type;
-          li.appendChild(nameSpan);
+          typeSpan.textContent = ": " + typePart;
+          typeSpan.style.color = "#666";
+          typeSpan.style.fontStyle = "italic";
+          
+          li.appendChild(relationshipSpan);
           li.appendChild(typeSpan);
           relationsList.appendChild(li);
         });
@@ -1080,6 +1162,7 @@ var links = [
   {source: "Griff", target: "Cherry", type: "that annoying coworker"},
   {source: "Hooper", target: "Lashly", type: "father figure"},
   {source: "Clissold", target: "Lashly", type: "father figure"},
+  {source: "Doorly", target: "Teddy", type: "musical frat bros"},
 
 
     ];
