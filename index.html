@@ -2,11 +2,31 @@
 <html>
 <head>
   <title>The Greater Polar Polycule</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gothic+A1&family=Goudy+Bookletter+1911&family=Instrument+Serif:ital@0;1&family=Jacquard+12&family=Jacquard+12+Charted&display=swap" rel="stylesheet">
   <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style type="text/css">
+    body {
+      background-color: #FFF3E3;
+      font-family: "Goudy Bookletter 1911", serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+    
     #network {
       width: 100vw;
       height: 100vh;
+    }
+    
+    /* Remove padding/margin from vis.js labels to fix spacing */
+    .vis-network .vis-label {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .vis-network .vis-node .vis-label {
+      padding: 0 !important;
+      margin: 0 !important;
     }
     
     /* Style for circular image nodes to show upper portion */
@@ -47,7 +67,7 @@
       cursor: pointer;
       user-select: none;
       border-bottom: 1px solid #eee;
-      font-family: sans-serif;
+      font-family: "Goudy Bookletter 1911", serif;
       font-weight: 600;
       font-size: 16px;
       color: #333;
@@ -69,7 +89,7 @@
     .filter-option {
       padding: 6px 12px;
       cursor: pointer;
-      font-family: sans-serif;
+      font-family: "Goudy Bookletter 1911", serif;
       font-size: 14px;
       border-radius: 20px;
       margin-bottom: 8px;
@@ -95,13 +115,13 @@
     }
     #title-box h2 {
       margin: 0 0 10px 0;
-      font-family: sans-serif;
+      font-family: "Goudy Bookletter 1911", serif;
       font-size: 24px;
       color: #333;
     }
     #title-box p {
       margin: 0;
-      font-family: sans-serif;
+      font-family: "Goudy Bookletter 1911", serif;
       font-size: 14px;
       color: #666;
       line-height: 1.4;
@@ -119,7 +139,7 @@
       z-index: 1001;
       display: none;
       overflow-y: auto;
-      font-family: sans-serif;
+      font-family: "Goudy Bookletter 1911", serif;
     }
     #info-pane.visible {
       display: block;
@@ -476,7 +496,7 @@
       },
       "Macklin": {
         fullName: "Alexander Hepburne Macklin",
-        photo: "https://www.researchgate.net/publication/301947109/figure/fig2/AS:895434360881154@1590499596399/Dr-Alexander-Macklin-Reproduced-with-permission-from-the-Macklin-family.ppm",
+        photo: "https://pbs.twimg.com/media/DJg_LjVXcAEXIVM.jpg",
         lifespan: "1889-1967",
         expeditions: ["Endurance", "Quest"],
         bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
@@ -597,7 +617,7 @@
         fullName: "Edward Ratcliffe Garth Russell Evans",
         photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Commander_Evans_5126121136_99388b2868_o.jpg/500px-Commander_Evans_5126121136_99388b2868_o.jpg",
         lifespan: "1880-1957",
-        expeditions: ["Terra Nova"],
+        expeditions: ["Morning", "Terra Nova"],
         bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
       },
       "Wild": {
@@ -718,23 +738,23 @@
     // Function to get color for expedition lozenge
     // Returns consistent colors based on expedition name
     function getExpeditionColor(expedition) {
-      // Color palette: pastel backgrounds with darker text, or jewel tones with light text
+      // Color palette from user's theme
       var colorMap = {
-        "Terra Nova": { bg: "#FFE5E5", text: "#8B0000" }, // Light red / dark red
-        "Discovery": { bg: "#E5F3FF", text: "#003366" }, // Light blue / dark blue
-        "Endurance": { bg: "#FFF5E5", text: "#CC6600" }, // Light orange / dark orange
-        "Ross Sea Party": { bg: "#E5FFE5", text: "#006600" }, // Light green / dark green
-        "Quest": { bg: "#F0E5FF", text: "#4B0082" }, // Light purple / dark purple
-        "Australasian Antarctic Expedition": { bg: "#FFE5F0", text: "#8B0043" }, // Light pink / dark pink
-        "Nimrod": { bg: "#E5FFFF", text: "#008080" }, // Light cyan / dark teal
-        "Fram (1910)": { bg: "#E5E5FF", text: "#000080" }, // Light indigo / dark indigo
-        "Fram (1893)": { bg: "#FFE5CC", text: "#8B4513" }, // Light peach / dark brown
-        "Gjøa": { bg: "#E5FFE5", text: "#2E7D32" }, // Light green / dark green
-        "Maud": { bg: "#FFE5F5", text: "#880E4F" }, // Light rose / dark rose
-        "Belgica": { bg: "#E5F5FF", text: "#01579B" }, // Light sky / dark sky
-        "British Arctic Expedition (1925)": { bg: "#FFF0E5", text: "#E65100" }, // Light apricot / dark orange
-        "BANZARE": { bg: "#F5E5FF", text: "#6A1B9A" }, // Light lavender / dark purple
-        "Karluk": { bg: "#E5FFE5", text: "#1B5E20" } // Light mint / dark green
+        "Terra Nova": { bg: "#D996AE", text: "#FFFFFF" }, // Pink rose
+        "Discovery": { bg: "#A8A9BF", text: "#FFFFFF" }, // Lavender gray
+        "Endurance": { bg: "#555973", text: "#FFFFFF" }, // Dark blue-gray
+        "Ross Sea Party": { bg: "#637AA6", text: "#FFFFFF" }, // Blue
+        "Quest": { bg: "#F2C1B6", text: "#555973" }, // Peach (light, needs dark text)
+        "Australasian Antarctic Expedition": { bg: "#D996AE", text: "#FFFFFF" }, // Pink rose
+        "Nimrod": { bg: "#A8A9BF", text: "#FFFFFF" }, // Lavender gray
+        "Fram (1910)": { bg: "#637AA6", text: "#FFFFFF" }, // Blue
+        "Fram (1893)": { bg: "#555973", text: "#FFFFFF" }, // Dark blue-gray
+        "Gjøa": { bg: "#F2C1B6", text: "#555973" }, // Peach
+        "Maud": { bg: "#D996AE", text: "#FFFFFF" }, // Pink rose
+        "Belgica": { bg: "#A8A9BF", text: "#FFFFFF" }, // Lavender gray
+        "British Arctic Expedition (1925)": { bg: "#637AA6", text: "#FFFFFF" }, // Blue
+        "BANZARE": { bg: "#555973", text: "#FFFFFF" }, // Dark blue-gray
+        "Karluk": { bg: "#F2C1B6", text: "#555973" } // Peach
       };
       
       // If expedition is in map, use that color
@@ -748,19 +768,16 @@
         hash = expedition.charCodeAt(i) + ((hash << 5) - hash);
       }
       
-      // Use pastel colors with darker text
-      var pastels = [
-        { bg: "#FFE5E5", text: "#8B0000" }, // Red
-        { bg: "#E5F3FF", text: "#003366" }, // Blue
-        { bg: "#FFF5E5", text: "#CC6600" }, // Orange
-        { bg: "#E5FFE5", text: "#006600" }, // Green
-        { bg: "#F0E5FF", text: "#4B0082" }, // Purple
-        { bg: "#FFE5F0", text: "#8B0043" }, // Pink
-        { bg: "#E5FFFF", text: "#008080" }, // Cyan
-        { bg: "#E5E5FF", text: "#000080" }  // Indigo
+      // Use theme colors for fallback
+      var themeColors = [
+        { bg: "#D996AE", text: "#FFFFFF" }, // Pink rose
+        { bg: "#A8A9BF", text: "#FFFFFF" }, // Lavender gray
+        { bg: "#555973", text: "#FFFFFF" }, // Dark blue-gray
+        { bg: "#637AA6", text: "#FFFFFF" }, // Blue
+        { bg: "#F2C1B6", text: "#555973" }  // Peach (light, needs dark text)
       ];
       
-      return pastels[Math.abs(hash) % pastels.length];
+      return themeColors[Math.abs(hash) % themeColors.length];
     }
     
     // Function to get person info or return defaults
@@ -1208,7 +1225,8 @@ links.forEach(function(link) {
           }
         },
         font: {
-          size: 20
+          size: Math.max(12, Math.min(size * 0.4, 24)), // Scale font with node size
+          align: "center"
         },
         fixed: false
       };
