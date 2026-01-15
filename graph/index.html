@@ -51,6 +51,106 @@
       z-index: 1000;
       pointer-events: none;
     }
+    /* Submission Form */
+    #submission-form-menu {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1002;
+      min-width: 280px;
+      max-width: 350px;
+    }
+    #submission-form-header {
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid #eee;
+      font-family: "Goudy Bookletter 1911", serif;
+      font-weight: 600;
+      font-size: 16px;
+      color: #333;
+    }
+    #submission-form-header:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    #submission-form-content {
+      display: none;
+      padding: 16px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #submission-form-content.visible {
+      display: flex;
+    }
+    #submission-form-content label {
+      font-family: "Goudy Bookletter 1911", serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-bottom: 4px;
+    }
+    #submission-form-content input,
+    #submission-form-content textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: "Goudy Bookletter 1911", serif;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    #submission-form-content input:focus,
+    #submission-form-content textarea:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+    #submission-form-content textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    #submission-form-content button {
+      padding: 10px 16px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-family: "Goudy Bookletter 1911", serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    #submission-form-content button:hover {
+      background-color: #0052a3;
+    }
+    #submission-form-content button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #submission-form-content .form-message {
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-top: 4px;
+      display: none;
+    }
+    #submission-form-content .form-message.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    #submission-form-content .form-message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    
     #filter-menu {
       position: fixed;
       bottom: 20px;
@@ -249,6 +349,24 @@
 </head>
 <body>
   <div id="network"></div>
+  <div id="submission-form-menu">
+    <div id="submission-form-header" onclick="toggleSubmissionForm()">Suggest a Relationship ▶</div>
+    <div id="submission-form-content">
+      <form id="relationship-submission-form" onsubmit="handleSubmission(event)">
+        <label for="person1">Person 1 (Source):</label>
+        <input type="text" id="person1" name="person1" required maxlength="100">
+        
+        <label for="person2">Person 2 (Target):</label>
+        <input type="text" id="person2" name="person2" required maxlength="100">
+        
+        <label for="relation">Relationship Description:</label>
+        <textarea id="relation" name="relation" required maxlength="200"></textarea>
+        
+        <button type="submit" id="submit-btn">Submit</button>
+        <div id="form-message" class="form-message"></div>
+      </form>
+    </div>
+  </div>
   <div id="title-box">
     <h2>The Polar Polycule</h2>
     <p>welcome to the polar polycule. click the circles and drag to explore relationships. use your touchpad to zoom</p>
@@ -1008,6 +1126,121 @@
       }
     }
 
+    // Toggle submission form visibility
+    function toggleSubmissionForm() {
+      var formContent = document.getElementById("submission-form-content");
+      var header = document.getElementById("submission-form-header");
+      formContent.classList.toggle("visible");
+      if (formContent.classList.contains("visible")) {
+        header.textContent = "Suggest a Relationship ▼";
+      } else {
+        header.textContent = "Suggest a Relationship ▶";
+      }
+    }
+    
+    // Sanitize input to prevent injection attacks
+    // Only allows plain text, letters, numbers, spaces, and basic punctuation
+    function sanitizeInput(input) {
+      if (!input) return '';
+      // Remove any HTML tags and allow only safe characters
+      // Allow: letters, numbers, spaces, basic punctuation: . , ! ? - ' ( ) : ;
+      var sanitized = input.replace(/<[^>]*>/g, ''); // Remove HTML tags
+      sanitized = sanitized.replace(/[^a-zA-Z0-9\s.,!?\-'():;]/g, ''); // Keep only safe chars
+      sanitized = sanitized.trim(); // Remove leading/trailing whitespace
+      return sanitized;
+    }
+    
+    // Handle form submission
+    function handleSubmission(event) {
+      event.preventDefault();
+      
+      var submitBtn = document.getElementById("submit-btn");
+      var messageDiv = document.getElementById("form-message");
+      
+      // Get and sanitize form values
+      var person1 = sanitizeInput(document.getElementById("person1").value);
+      var person2 = sanitizeInput(document.getElementById("person2").value);
+      var relation = sanitizeInput(document.getElementById("relation").value);
+      
+      // Validate inputs
+      if (!person1 || person1.length === 0) {
+        messageDiv.textContent = "Please enter Person 1";
+        messageDiv.className = "form-message error";
+        return;
+      }
+      if (!person2 || person2.length === 0) {
+        messageDiv.textContent = "Please enter Person 2";
+        messageDiv.className = "form-message error";
+        return;
+      }
+      if (!relation || relation.length === 0) {
+        messageDiv.textContent = "Please enter a relationship description";
+        messageDiv.className = "form-message error";
+        return;
+      }
+      
+      // Disable submit button
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+      
+      // Prepare submission data
+      var submissionData = {
+        person1: person1,
+        person2: person2,
+        relation: relation,
+        timestamp: new Date().toISOString(),
+        source: "graph_submission"
+      };
+      
+      // Submit to backend
+      // Using FormSubmit service (free, no API key needed)
+      // You can change this to your own backend endpoint
+      var form = document.getElementById("relationship-submission-form");
+      form.action = "https://formsubmit.co/areyougonnabeareyougonnabe@gmail.com"; // Replace with your email
+      form.method = "POST";
+      
+      // Add hidden fields for FormSubmit
+      var hiddenFields = {
+        '_subject': 'New Relationship Suggestion - Polar Polycule',
+        '_template': 'box',
+        'person1': person1,
+        'person2': person2,
+        'relation': relation,
+        'timestamp': submissionData.timestamp
+      };
+      
+      // Remove existing hidden inputs
+      var existingHidden = form.querySelectorAll('input[type="hidden"]');
+      existingHidden.forEach(function(input) {
+        input.remove();
+      });
+      
+      // Add hidden inputs
+      Object.keys(hiddenFields).forEach(function(key) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = hiddenFields[key];
+        form.appendChild(input);
+      });
+      
+      // Submit form
+      form.submit();
+      
+      // Show success message (form will redirect, but just in case)
+      messageDiv.textContent = "Thank you! Your suggestion has been submitted.";
+      messageDiv.className = "form-message success";
+      
+      // Reset form after a delay
+      setTimeout(function() {
+        form.reset();
+        messageDiv.className = "form-message";
+        messageDiv.textContent = "";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit";
+      }, 3000);
+    }
+    
     // Filter menu functionality
     var selectedExpedition = null; // { name: string, fromCard: boolean }
     
